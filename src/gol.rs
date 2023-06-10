@@ -1,9 +1,9 @@
 use std::fmt;
 
-pub const WORLD_SIZE: usize = 6;
+pub const WORLD_SIZE: usize = 16;
 
 pub struct World {
-    map: [[u8; WORLD_SIZE]; WORLD_SIZE],
+    pub map: [[u8; WORLD_SIZE]; WORLD_SIZE],
 }
 
 impl World {
