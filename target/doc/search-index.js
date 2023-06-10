@@ -1,0 +1,5 @@
+var searchIndex = JSON.parse('{\
+"lenia":{"doc":"","t":[0,5,17,3,11,11,5,11,11,11,11,11,11,11,12,11,11,5,11,11,11,11,11],"n":["gol","main","WORLD_SIZE","World","borrow","borrow_mut","convolution","deref","deref_mut","drop","fmt","from","init","into","map","new_empty_world","new_world","rule","step_forward","to_string","try_from","try_into","type_id"],"q":["lenia","","lenia::gol","","","","","","","","","","","","","","","","","","","",""],"d":["","","","","","","","","","","","Returns the argument unchanged.","","Calls <code>U::from(self)</code>.","","","","","","","","",""],"i":[0,0,0,0,3,3,0,3,3,3,3,3,3,3,3,3,3,0,3,3,3,3,3],"f":[0,[[]],0,0,[[]],[[]],[[],1],[2],[2],[2],[[3,4],5],[[]],[[],2],[[]],0,[[],3],[[],3],[[1,1],1],[3],[[],6],[[],7],[[],7],[[],8]],"p":[[15,"u8"],[15,"usize"],[3,"World"],[3,"Formatter"],[6,"Result"],[3,"String"],[4,"Result"],[3,"TypeId"]]}\
+}');
+if (typeof window !== 'undefined' && window.initSearch) {window.initSearch(searchIndex)};
+if (typeof exports !== 'undefined') {exports.searchIndex = searchIndex};
