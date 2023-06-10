@@ -25,11 +25,7 @@ impl World {
         for x in 0..WORLD_SIZE {
             for y in 0..WORLD_SIZE {
                 world_with_buffer[x+1][y+1] = self.map[x][y];
-            }
-        }
 
-        for x in 0..WORLD_SIZE {
-            for y in 0..WORLD_SIZE {
                 let neighborhood: [[u8; 3]; 3] = [
                     [world_with_buffer[x  ][y], world_with_buffer[x  ][y+1], world_with_buffer[x  ][y+2]],
                     [world_with_buffer[x+1][y], world_with_buffer[x+1][y+1], world_with_buffer[x+1][y+2]],
