@@ -1,3 +1,3 @@
 # lenia
 ## Pulsar Pattern
-![](Pulsar.mov)
+![](https://github.com/ianwineman/lenia/raw/dev-ian/Pulsar.mov)
