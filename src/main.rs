@@ -1,4 +1,6 @@
 #![crate_name = "lenia"]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 
 mod gol;
 use gol::*;
