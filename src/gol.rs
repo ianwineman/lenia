@@ -1,6 +1,6 @@
 use std::fmt;
 
-pub const WORLD_SIZE: usize = 16;
+pub const WORLD_SIZE: usize = 17;
 
 pub struct World {
     pub map: [[u8; WORLD_SIZE]; WORLD_SIZE],
