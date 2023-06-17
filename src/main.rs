@@ -41,7 +41,7 @@ fn main() {
     let mut gl = GlGraphics::new(opengl);
 
     //define world:
-    let mut world: World = World::new_world(
+    let mut world: World = World::new(
         [
             [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -72,7 +72,7 @@ fn main() {
             
             if k.state == ButtonState::Press {
                 match k.button {
-                    Button::Keyboard(Key::Space) => world.step_forward(),
+                    Button::Keyboard(Key::Space) => { world.step_forward(); println!("{}", world.to_rle()) },
                     _ => ()
                 }
             }

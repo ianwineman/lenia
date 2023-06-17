@@ -1,4 +1,6 @@
 use std::fmt;
+use std::str;
+use std::convert::TryFrom;
 
 pub const WORLD_SIZE: usize = 17;
 
@@ -7,16 +9,41 @@ pub struct World {
 }
 
 impl World {
-    pub fn new_empty_world() -> World {
+    pub fn new_empty() -> World {
         World {
             map: [[0; WORLD_SIZE]; WORLD_SIZE]
         }
     }
 
-    pub fn new_world(seed: [[u8; WORLD_SIZE]; WORLD_SIZE]) -> World {
+    pub fn new(seed: [[u8; WORLD_SIZE]; WORLD_SIZE]) -> World {
         World {
             map: seed
         }
+    }
+
+    pub fn new_world_from_rle(rle: &str) -> World {
+        todo!();
+    }
+
+    pub fn to_rle(&self) -> String {
+        let map: [[u8; WORLD_SIZE]; WORLD_SIZE] = self.map;
+        let mut scan_line: String = String::new();
+
+        for row in map {
+            for i in row {
+                match i {
+                    0 => { scan_line.push('0') },
+                    1 => { scan_line.push('1') },
+                    _ => { },
+                }
+            }
+        }
+
+        let mut rle: String = (WORLD_SIZE as u32).to_string();
+        rle.push_str("::");
+        rle.push_str(&run_length_encoding(scan_line));
+
+        return rle
     }
 
     pub fn step_forward(&mut self) {
@@ -54,11 +81,52 @@ impl fmt::Display for World {
     }
 }
 
-pub fn convolution(neighborhood: [[u8; 3]; 3]) -> u8 {
+fn run_length_encoding(scan_line: String) -> String {
+    let mut char_pairs: Vec<(u32, char)> = Vec::new();
+    let scan_str: &str = scan_line.as_str();
+
+    let mut counting_char: char = scan_str.chars().next().unwrap();
+    let mut counter: u32 = 0;
+
+    for c in scan_str.chars() {
+        if c == counting_char {
+            counter += 1;
+        }
+        else {
+            char_pairs.push((counter, counting_char));
+            counter = 1;
+            counting_char = c;
+        }
+    }
+    char_pairs.push((counter, counting_char));
+
+    let mut encoded: String = String::new();
+
+    for i in char_pairs {
+        let num: String = i.0.to_string();
+        for c in num.chars() {
+            encoded.push(c);
+        }
+
+        if i.1 == '0' {
+            encoded.push('d')
+        }
+        else if i.1 == '1' {
+            encoded.push('a')
+        }
+        else {
+            panic!();
+        }
+    }
+
+    return encoded
+}
+
+fn convolution(neighborhood: [[u8; 3]; 3]) -> u8 {
     return neighborhood[0].into_iter().sum::<u8>() + neighborhood[1][0] + neighborhood[1][2] + neighborhood[2].into_iter().sum::<u8>()
 }
 
-pub fn rule(neighborhood_sum: u8, cell_state: u8) -> u8 {
+fn rule(neighborhood_sum: u8, cell_state: u8) -> u8 {
     match cell_state {
         0 => match neighborhood_sum {
             0 | 1 | 2 => return 0,
