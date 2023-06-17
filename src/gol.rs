@@ -86,9 +86,10 @@ impl World {
         return rle
     }
 
-    pub fn save(&self) {
-        // write world map to file with rle encoding
-        todo!();
+    pub fn save(&self, path: &str) {
+        let rle: String = self.to_rle();
+
+        fs::write(path, &rle).expect("Unable to write file.");
     }
 
     pub fn step_forward(&mut self) {

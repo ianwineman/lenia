@@ -41,6 +41,7 @@ fn main() {
     let mut gl = GlGraphics::new(opengl);
 
     let mut world: World = World::new_from_rle("patterns/pulsar1.txt");
+    world.save("patterns/test.txt");
 
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
