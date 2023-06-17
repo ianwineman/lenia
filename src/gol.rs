@@ -1,6 +1,6 @@
 use std::fmt;
 
-pub const WORLD_SIZE: usize = 16;
+pub const WORLD_SIZE: usize = 17;
 
 pub struct World {
     pub map: [[u8; WORLD_SIZE]; WORLD_SIZE],
@@ -44,6 +44,7 @@ impl World {
     }
 }
 
+#[allow(unused_must_use)]
 impl fmt::Display for World {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for row in self.map {
@@ -70,5 +71,118 @@ pub fn rule(neighborhood_sum: u8, cell_state: u8) -> u8 {
             4..   => return 0,
         },
         _ => panic!("cell_state != 0 | 1"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn convolution_test_1() {
+        let neighborhood: [[u8; 3]; 3] = [
+            [1,0,1],
+            [0,1,0],
+            [1,0,1]
+        ];
+
+        let convolution_output: u8 = convolution(neighborhood);
+
+        assert_eq!(
+            convolution_output, 
+            4_u8,
+            "Expected 4, got {}.",
+            convolution_output,
+        );
+    }
+
+    #[test]
+    fn rule_test_1() {
+        let neighborhood_sum: u8 = 3;
+        let cell_state: u8 = 0;
+
+        let rule_output: u8 = rule(neighborhood_sum, cell_state);
+
+        assert_eq!(
+            rule_output, 
+            1_u8,
+            "Expected 1, got {}.",
+            rule_output,
+        );
+    }
+
+    #[test]
+    fn rule_test_2() {
+        let neighborhood_sum: u8 = 1;
+        let cell_state: u8 = 0;
+
+        let rule_output: u8 = rule(neighborhood_sum, cell_state);
+
+        assert_eq!(
+            rule_output, 
+            0_u8,
+            "Expected 0, got {}.",
+            rule_output,
+        );
+    }
+
+    #[test]
+    fn rule_test_3() {
+        let neighborhood_sum: u8 = 100;
+        let cell_state: u8 = 0;
+
+        let rule_output: u8 = rule(neighborhood_sum, cell_state);
+
+        assert_eq!(
+            rule_output, 
+            0_u8,
+            "Expected 0, got {}.",
+            rule_output,
+        );
+    }
+
+    #[test]
+    fn rule_test_4() {
+        let neighborhood_sum: u8 = 0;
+        let cell_state: u8 = 1;
+
+        let rule_output: u8 = rule(neighborhood_sum, cell_state);
+
+        assert_eq!(
+            rule_output, 
+            0_u8,
+            "Expected 0, got {}.",
+            rule_output,
+        );
+    }
+
+    #[test]
+    fn rule_test_5() {
+        let neighborhood_sum: u8 = 3;
+        let cell_state: u8 = 1;
+
+        let rule_output: u8 = rule(neighborhood_sum, cell_state);
+
+        assert_eq!(
+            rule_output, 
+            1_u8,
+            "Expected 1, got {}.",
+            rule_output,
+        );
+    }
+
+    #[test]
+    fn rule_test_6() {
+        let neighborhood_sum: u8 = 7;
+        let cell_state: u8 = 1;
+
+        let rule_output: u8 = rule(neighborhood_sum, cell_state);
+
+        assert_eq!(
+            rule_output, 
+            0_u8,
+            "Expected 0, got {}.",
+            rule_output,
+        );
     }
 }
