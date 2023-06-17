@@ -1,6 +1,8 @@
 use std::fmt;
 use std::str;
+use std::fs;
 use std::convert::TryFrom;
+use regex::Regex;
 
 pub const WORLD_SIZE: usize = 17;
 
@@ -21,8 +23,46 @@ impl World {
         }
     }
 
-    pub fn new_world_from_rle(rle: &str) -> World {
-        todo!();
+    pub fn new_from_rle(path: &str) -> World {
+        let file_string: String = fs::read_to_string(path).expect("Unable to read file.");
+        let mut file_string_split: Vec<&str> = file_string.split(":").collect();
+        let rle_str: &str = file_string_split.pop().unwrap();
+
+        let mut decoded_flat_vec: Vec<u8> = Vec::new();
+
+        for caps in Regex::new(r"(?P<num>\d+)(?P<state>a|d)").unwrap().captures_iter(rle_str) {
+            let num: u8 = caps["num"].to_string().parse::<u8>().unwrap();
+
+            for _ in 0..num {
+                if &caps["state"] == "a" {
+                    decoded_flat_vec.push(1);
+                }
+                else if &caps["state"] == "d" {
+                    decoded_flat_vec.push(0);
+                }
+                else {
+                    panic!();
+                }
+            }
+        }
+
+        let mut twod_vec: Vec<&[u8]> = Vec::new();
+
+        for i in 0..WORLD_SIZE {
+            twod_vec.push(&decoded_flat_vec[i*WORLD_SIZE..(i+1)*WORLD_SIZE]);
+        }
+
+        let world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = twod_vec.into_iter()
+                                                                .map(|slice| slice
+                                                                .try_into()
+                                                                .unwrap())
+                                                                .collect::<Vec<[u8; WORLD_SIZE]>>()
+                                                                .try_into()
+                                                                .unwrap();
+
+        World {
+            map: world_map
+        }
     }
 
     pub fn to_rle(&self) -> String {
@@ -44,6 +84,11 @@ impl World {
         rle.push_str(&run_length_encoding(scan_line));
 
         return rle
+    }
+
+    pub fn save(&self) {
+        // write world map to file with rle encoding
+        todo!();
     }
 
     pub fn step_forward(&mut self) {
