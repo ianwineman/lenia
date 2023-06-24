@@ -42,15 +42,8 @@ fn main() {
     let mut gl = GlGraphics::new(opengl);
 
     let mut mouse_coords = [0.0; 2];
-
-    //define world:
-    //blank world
-    let mut world: World = World::new_world(
-        [ [0; 16]; 16 ]
-    );
-
-
-
+    let mut world: World = World::new_from_rle("patterns/pulsar1.txt");
+    world.save("patterns/test.txt");
 
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
@@ -106,26 +99,4 @@ fn main() {
             });
         }
     }
-  
-    //let world1: World = World::new_empty_world();
-    //println!("{}", world1);
-
-    /*
-    let mut world: World = World::new_world(
-        [
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 1, 0, 0, 0],
-            [0, 1, 1, 0, 0, 0],
-            [0, 0, 0, 1, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0]
-        ]
-    );
-
-    println!("{}", world2);
-    for i in 1..5 {
-        world2.step_forward();
-        println!("{}", world2);
-    }
-    */
 }
