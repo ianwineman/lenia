@@ -8,8 +8,9 @@ use gol::*;
 extern crate piston;
 use piston::WindowSettings;
 use piston::event_loop::{EventSettings, Events, EventLoop};
-use piston::input::{Button, ButtonState, Key};
-use piston::{ButtonEvent, RenderEvent};
+use piston::input::{Button, ButtonState, Key, MouseButton};
+use piston::{ButtonEvent, RenderEvent, Input, Motion, MouseCursorEvent};
+use piston::Motion::MouseCursor;
 
 use graphics::character::CharacterCache;
 use graphics::Transformed;
@@ -31,7 +32,7 @@ const WHITE: Color = [1.0; 4];
 const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
 
 const WINDOW_SIZE: i32 = 512;
-const SCALE_FACTOR: f64 = 30.0;
+const SCALE_FACTOR: f64 = 32.0;
 const GRID_SIZE: i32 = WINDOW_SIZE / SCALE_FACTOR as i32; 
 
 fn main() {
@@ -40,21 +41,32 @@ fn main() {
     let mut window: GlutinWindow = settings.build().expect("Could not create window");
     let mut gl = GlGraphics::new(opengl);
 
+    let mut mouse_coords = [0.0; 2];
     let mut world: World = World::new_from_rle("patterns/pulsar1.txt");
     world.save("patterns/test.txt");
 
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
+        // button press responses
         if let Some(k) = e.button_args(){
-            
             if k.state == ButtonState::Press {
                 match k.button {
-                    Button::Keyboard(Key::Space) => { world.step_forward(); },
+                    Button::Keyboard(Key::Space) => world.step_forward(),
+                    Button::Mouse(MouseButton::Left) => {
+                        let grid_pos_row = (mouse_coords[1] / SCALE_FACTOR).floor() as usize;
+                        let grid_pos_col = (mouse_coords[0] / SCALE_FACTOR).floor() as usize;
+                        println!("row: {0}  col: {1}", grid_pos_row, grid_pos_col);
+                        world.update_cell(grid_pos_row, grid_pos_col);
+                    }
                     _ => ()
                 }
             }
-            
         }
+        // mouse events
+        if let Some(m) = e.mouse_cursor_args() {
+            mouse_coords = m;
+        }
+
         if let Some(r) = e.render_args() {
             gl.draw(r.viewport(), |_c, g| {
                 graphics::clear(BLUE, g);

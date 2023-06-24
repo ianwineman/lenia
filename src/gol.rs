@@ -4,7 +4,7 @@ use std::fs;
 use std::convert::TryFrom;
 use regex::Regex;
 
-pub const WORLD_SIZE: usize = 17;
+pub const WORLD_SIZE: usize = 16;
 
 pub struct World {
     pub map: [[u8; WORLD_SIZE]; WORLD_SIZE],
@@ -114,6 +114,14 @@ impl World {
                 self.map[x][y] = rule(cell_neighborhood_sum, cell_state);
             }
         }
+    }
+
+    pub fn update_cell(&mut self, row: usize, col: usize) {
+        match self.map[row][col] {
+            1 => self.map[row][col] = 0,
+            0 => self.map[row][col] = 1,
+            _ => ()
+        };
     }
 }
 
