@@ -2,10 +2,13 @@ use regex::Regex;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fs;
+use std::convert::TryFrom;
 use std::str;
+use regex::Regex;
 use rand::Rng;
 
-pub const WORLD_SIZE: usize = 17;
+pub const WORLD_SIZE: usize = 512;
+
 
 pub struct World {
     pub map: [[u8; WORLD_SIZE]; WORLD_SIZE],
