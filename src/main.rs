@@ -43,8 +43,8 @@ const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
 const WINDOW_SIZE: i32 = 512;
 
 //const SCALE_FACTOR: f64 = 32.0;
-//const GRID_SIZE: i32 = WINDOW_SIZE / SCALE_FACTOR as i32; 
-const INPUT_FILE: &str = "patterns/pulsar1.lenia";
+//const GRID_SIZE: i32 = WINDOW_SIZE / SCALE_FACTOR as i32;
+const INPUT_FILE: &str = "patterns/13c787db-82b0-4c3d-9007-12c24cf74fc2.lenia";
 
 
 fn main() {
@@ -53,7 +53,7 @@ fn main() {
     let mut window: GlutinWindow = settings.build().expect("Could not create window");
     let mut gl = GlGraphics::new(opengl);
 
-    let mut mouse_coords = [0.0; 2];
+    //let mut mouse_coords = [0.0; 2];
 
     let mut world: World = World::new_random();
     //world.save("patterns/test.txt");
@@ -137,8 +137,9 @@ fn main() {
         }
 
         // mouse events
+        #[allow(unused)]
         if let Some(m) = e.mouse_cursor_args() {
-            mouse_coords = m;
+            //mouse_coords = m;
         }
 
         if let Some(r) = e.render_args() {

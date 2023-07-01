@@ -2,9 +2,7 @@ use regex::Regex;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fs;
-use std::convert::TryFrom;
 use std::str;
-use regex::Regex;
 use rand::Rng;
 
 pub const WORLD_SIZE: usize = 512;
