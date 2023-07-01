@@ -50,6 +50,7 @@ fn main() {
 
     let mut world: World = World::new_from_rle(INPUT_FILE);
     let mut saves: String = String::from(INPUT_FILE);
+    println!("World starting point: {}", saves);
 
     let mut loop_: bool = false;
 
@@ -71,7 +72,10 @@ fn main() {
         if let Some(k) = e.button_args() {
             if k.state == ButtonState::Press {
                 match k.button {
-                    Button::Keyboard(Key::H) => println!("Lenia User Manual:\nPress 'b' to create a blank world\nPress 's' to save current pattern.\nPress 'r' to reset to last saved pattern (input pattern if no saves made)\nPress 'Right_Arrow' to step forward\nPress 'Space' to toggle continuous stepping"),
+                    Button::Keyboard(Key::H) => println!("Lenia User Manual:\nPress 'b' to create a blank world\nPress 'n' to create a random world\nPress 's' to save current pattern.\nPress 'r' to reset to last saved pattern (input pattern if no saves made)\nPress 'Right_Arrow' to step forward\nPress 'Space' to toggle continuous stepping\nPress 'esc' to quit"),
+                    Button::Keyboard(Key::N) => {
+                        world = World::new_random();
+                    }
                     Button::Keyboard(Key::B) => {
                         world = World::new_empty();
                     }
@@ -95,6 +99,7 @@ fn main() {
                         let path: String = format!("patterns/{}.lenia", uuid.hyphenated().to_string());
                         saves = path.clone();
                         world.save(&path);
+                        println!("World starting point: {}", saves);
                     }
                     _ => (),
                 }

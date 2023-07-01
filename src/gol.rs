@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::fs;
 use std::str;
+use rand::Rng;
 
 pub const WORLD_SIZE: usize = 17;
 
@@ -14,6 +15,21 @@ impl World {
     pub fn new_empty() -> World {
         World {
             map: [[0; WORLD_SIZE]; WORLD_SIZE],
+        }
+    }
+
+    pub fn new_random() -> World {
+        let mut rng = rand::thread_rng();
+        let mut world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = [[0; WORLD_SIZE]; WORLD_SIZE];
+
+        for x in 0..WORLD_SIZE {
+            for y in 0..WORLD_SIZE {
+                world_map[x][y] += rng.gen_range(0..2);
+            }
+        }
+
+        World {
+            map: world_map,
         }
     }
 
