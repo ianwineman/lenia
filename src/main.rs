@@ -72,12 +72,15 @@ fn main() {
         if let Some(k) = e.button_args() {
             if k.state == ButtonState::Press {
                 match k.button {
-                    Button::Keyboard(Key::H) => println!("Lenia User Manual:\nPress 'b' to create a blank world\nPress 'n' to create a random world\nPress 's' to save current pattern.\nPress 'r' to reset to last saved pattern (input pattern if no saves made)\nPress 'Right_Arrow' to step forward\nPress 'Space' to toggle continuous stepping\nPress 'esc' to quit"),
+                    Button::Keyboard(Key::H) => println!("\nLenia User Manual:\nPress 'b' to create a blank world\nPress 'n' to create a random world\nPress 'o' to create a blank world with a random creature\nPress 's' to save current pattern.\nPress 'r' to reset to last saved pattern (input pattern if no saves made)\nPress 'Right_Arrow' to step forward\nPress 'Space' to toggle continuous stepping\nPress 'esc' to quit"),
                     Button::Keyboard(Key::N) => {
                         world = World::new_random();
                     }
                     Button::Keyboard(Key::B) => {
                         world = World::new_empty();
+                    }
+                    Button::Keyboard(Key::O) => {
+                        world = World::new_creature(6);
                     }
                     Button::Keyboard(Key::Space) => {
                         match loop_ {

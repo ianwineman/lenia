@@ -33,6 +33,43 @@ impl World {
         }
     }
 
+    pub fn new_creature(width: usize) -> World {
+        if WORLD_SIZE < width + 6 {
+            println!("WORLD_SIZE too small, creating blank world.");
+
+            return World {
+                map: [[0; WORLD_SIZE]; WORLD_SIZE],
+            }
+        }
+
+        let mut rng = rand::thread_rng();
+        let mut world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = [[0; WORLD_SIZE]; WORLD_SIZE];
+        let buffer_total: usize = WORLD_SIZE - width;
+
+        if buffer_total % 2 == 0 {
+            let buffer_width = buffer_total/2;
+
+            for x in buffer_width..(WORLD_SIZE-buffer_width) {
+                for y in buffer_width..(WORLD_SIZE-buffer_width) {
+                    world_map[x][y] += rng.gen_range(0..2);
+                }
+            }
+        }
+        else {
+            let buffer_width = (buffer_total - 1)/2;
+
+            for x in buffer_width..(WORLD_SIZE-buffer_width) {
+                for y in buffer_width..(WORLD_SIZE-buffer_width) {
+                    world_map[x][y] += rng.gen_range(0..2);
+                }
+            }
+        }
+
+        World {
+            map: world_map,
+        }
+    }
+
     pub fn new(seed: [[u8; WORLD_SIZE]; WORLD_SIZE]) -> World {
         World { map: seed }
     }
@@ -41,6 +78,14 @@ impl World {
         let file_string: String = fs::read_to_string(path).expect("Unable to read file.");
         let mut file_string_split: Vec<&str> = file_string.split(":").collect();
         let rle_str: &str = file_string_split.pop().unwrap();
+
+        if file_string_split[0].to_string().parse::<usize>().unwrap() != WORLD_SIZE {
+            println!("Pattern size does not equal WORLD_SIZE, creating blank world.");
+
+            return World {
+                map: [[0; WORLD_SIZE]; WORLD_SIZE],
+            }
+        }
 
         let mut decoded_flat_vec: Vec<u8> = Vec::new();
 
