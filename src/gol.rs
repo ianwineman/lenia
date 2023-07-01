@@ -1,10 +1,11 @@
-use std::fmt;
-use std::str;
-use std::fs;
-use std::convert::TryFrom;
 use regex::Regex;
+use std::convert::TryFrom;
+use std::fmt;
+use std::fs;
+use std::str;
+use rand::Rng;
 
-pub const WORLD_SIZE: usize = 16;
+pub const WORLD_SIZE: usize = 17;
 
 pub struct World {
     pub map: [[u8; WORLD_SIZE]; WORLD_SIZE],
@@ -13,14 +14,64 @@ pub struct World {
 impl World {
     pub fn new_empty() -> World {
         World {
-            map: [[0; WORLD_SIZE]; WORLD_SIZE]
+            map: [[0; WORLD_SIZE]; WORLD_SIZE],
+        }
+    }
+
+    pub fn new_random() -> World {
+        let mut rng = rand::thread_rng();
+        let mut world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = [[0; WORLD_SIZE]; WORLD_SIZE];
+
+        for x in 0..WORLD_SIZE {
+            for y in 0..WORLD_SIZE {
+                world_map[x][y] += rng.gen_range(0..2);
+            }
+        }
+
+        World {
+            map: world_map,
+        }
+    }
+
+    pub fn new_creature(width: usize) -> World {
+        if WORLD_SIZE < width + 6 {
+            println!("WORLD_SIZE too small, creating blank world.");
+
+            return World {
+                map: [[0; WORLD_SIZE]; WORLD_SIZE],
+            }
+        }
+
+        let mut rng = rand::thread_rng();
+        let mut world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = [[0; WORLD_SIZE]; WORLD_SIZE];
+        let buffer_total: usize = WORLD_SIZE - width;
+
+        if buffer_total % 2 == 0 {
+            let buffer_width = buffer_total/2;
+
+            for x in buffer_width..(WORLD_SIZE-buffer_width) {
+                for y in buffer_width..(WORLD_SIZE-buffer_width) {
+                    world_map[x][y] += rng.gen_range(0..2);
+                }
+            }
+        }
+        else {
+            let buffer_width = (buffer_total - 1)/2;
+
+            for x in buffer_width..(WORLD_SIZE-buffer_width) {
+                for y in buffer_width..(WORLD_SIZE-buffer_width) {
+                    world_map[x][y] += rng.gen_range(0..2);
+                }
+            }
+        }
+
+        World {
+            map: world_map,
         }
     }
 
     pub fn new(seed: [[u8; WORLD_SIZE]; WORLD_SIZE]) -> World {
-        World {
-            map: seed
-        }
+        World { map: seed }
     }
 
     pub fn new_from_rle(path: &str) -> World {
@@ -28,19 +79,28 @@ impl World {
         let mut file_string_split: Vec<&str> = file_string.split(":").collect();
         let rle_str: &str = file_string_split.pop().unwrap();
 
+        if file_string_split[0].to_string().parse::<usize>().unwrap() != WORLD_SIZE {
+            println!("Pattern size does not equal WORLD_SIZE, creating blank world.");
+
+            return World {
+                map: [[0; WORLD_SIZE]; WORLD_SIZE],
+            }
+        }
+
         let mut decoded_flat_vec: Vec<u8> = Vec::new();
 
-        for caps in Regex::new(r"(?P<num>\d+)(?P<state>a|d)").unwrap().captures_iter(rle_str) {
+        for caps in Regex::new(r"(?P<num>\d+)(?P<state>a|d)")
+            .unwrap()
+            .captures_iter(rle_str)
+        {
             let num: u8 = caps["num"].to_string().parse::<u8>().unwrap();
 
             for _ in 0..num {
                 if &caps["state"] == "a" {
                     decoded_flat_vec.push(1);
-                }
-                else if &caps["state"] == "d" {
+                } else if &caps["state"] == "d" {
                     decoded_flat_vec.push(0);
-                }
-                else {
+                } else {
                     panic!();
                 }
             }
@@ -49,20 +109,17 @@ impl World {
         let mut twod_vec: Vec<&[u8]> = Vec::new();
 
         for i in 0..WORLD_SIZE {
-            twod_vec.push(&decoded_flat_vec[i*WORLD_SIZE..(i+1)*WORLD_SIZE]);
+            twod_vec.push(&decoded_flat_vec[i * WORLD_SIZE..(i + 1) * WORLD_SIZE]);
         }
 
-        let world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = twod_vec.into_iter()
-                                                                .map(|slice| slice
-                                                                .try_into()
-                                                                .unwrap())
-                                                                .collect::<Vec<[u8; WORLD_SIZE]>>()
-                                                                .try_into()
-                                                                .unwrap();
+        let world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = twod_vec
+            .into_iter()
+            .map(|slice| slice.try_into().unwrap())
+            .collect::<Vec<[u8; WORLD_SIZE]>>()
+            .try_into()
+            .unwrap();
 
-        World {
-            map: world_map
-        }
+        World { map: world_map }
     }
 
     pub fn to_rle(&self) -> String {
@@ -72,9 +129,9 @@ impl World {
         for row in map {
             for i in row {
                 match i {
-                    0 => { scan_line.push('0') },
-                    1 => { scan_line.push('1') },
-                    _ => { },
+                    0 => scan_line.push('0'),
+                    1 => scan_line.push('1'),
+                    _ => {}
                 }
             }
         }
@@ -83,7 +140,7 @@ impl World {
         rle.push_str("::");
         rle.push_str(&run_length_encoding(scan_line));
 
-        return rle
+        return rle;
     }
 
     pub fn save(&self, path: &str) {
@@ -93,20 +150,33 @@ impl World {
     }
 
     pub fn step_forward(&mut self) {
-        let mut world_with_buffer: [[u8; WORLD_SIZE + 2]; WORLD_SIZE + 2] = [[0; WORLD_SIZE + 2]; WORLD_SIZE + 2];
+        let mut world_with_buffer: [[u8; WORLD_SIZE + 2]; WORLD_SIZE + 2] =
+            [[0; WORLD_SIZE + 2]; WORLD_SIZE + 2];
 
         for x in 0..WORLD_SIZE {
             for y in 0..WORLD_SIZE {
-                world_with_buffer[x+1][y+1] = self.map[x][y];
+                world_with_buffer[x + 1][y + 1] = self.map[x][y];
             }
         }
 
         for x in 0..WORLD_SIZE {
             for y in 0..WORLD_SIZE {
                 let neighborhood: [[u8; 3]; 3] = [
-                    [world_with_buffer[x  ][y], world_with_buffer[x  ][y+1], world_with_buffer[x  ][y+2]],
-                    [world_with_buffer[x+1][y], world_with_buffer[x+1][y+1], world_with_buffer[x+1][y+2]],
-                    [world_with_buffer[x+2][y], world_with_buffer[x+2][y+1], world_with_buffer[x+2][y+2]],
+                    [
+                        world_with_buffer[x][y],
+                        world_with_buffer[x][y + 1],
+                        world_with_buffer[x][y + 2],
+                    ],
+                    [
+                        world_with_buffer[x + 1][y],
+                        world_with_buffer[x + 1][y + 1],
+                        world_with_buffer[x + 1][y + 2],
+                    ],
+                    [
+                        world_with_buffer[x + 2][y],
+                        world_with_buffer[x + 2][y + 1],
+                        world_with_buffer[x + 2][y + 2],
+                    ],
                 ];
                 let cell_neighborhood_sum: u8 = convolution(neighborhood);
                 let cell_state: u8 = self.map[x][y];
@@ -120,7 +190,7 @@ impl World {
         match self.map[row][col] {
             1 => self.map[row][col] = 0,
             0 => self.map[row][col] = 1,
-            _ => ()
+            _ => (),
         };
     }
 }
@@ -145,8 +215,7 @@ fn run_length_encoding(scan_line: String) -> String {
     for c in scan_str.chars() {
         if c == counting_char {
             counter += 1;
-        }
-        else {
+        } else {
             char_pairs.push((counter, counting_char));
             counter = 1;
             counting_char = c;
@@ -164,33 +233,34 @@ fn run_length_encoding(scan_line: String) -> String {
 
         if i.1 == '0' {
             encoded.push('d')
-        }
-        else if i.1 == '1' {
+        } else if i.1 == '1' {
             encoded.push('a')
-        }
-        else {
+        } else {
             panic!();
         }
     }
 
-    return encoded
+    return encoded;
 }
 
 fn convolution(neighborhood: [[u8; 3]; 3]) -> u8 {
-    return neighborhood[0].into_iter().sum::<u8>() + neighborhood[1][0] + neighborhood[1][2] + neighborhood[2].into_iter().sum::<u8>()
+    return neighborhood[0].into_iter().sum::<u8>()
+        + neighborhood[1][0]
+        + neighborhood[1][2]
+        + neighborhood[2].into_iter().sum::<u8>();
 }
 
 fn rule(neighborhood_sum: u8, cell_state: u8) -> u8 {
     match cell_state {
         0 => match neighborhood_sum {
             0 | 1 | 2 => return 0,
-            3         => return 1,
-            4..       => return 0,
+            3 => return 1,
+            4.. => return 0,
         },
         1 => match neighborhood_sum {
             0 | 1 => return 0,
             2 | 3 => return 1,
-            4..   => return 0,
+            4.. => return 0,
         },
         _ => panic!("cell_state != 0 | 1"),
     }
@@ -202,17 +272,12 @@ mod tests {
 
     #[test]
     fn convolution_test_1() {
-        let neighborhood: [[u8; 3]; 3] = [
-            [1,0,1],
-            [0,1,0],
-            [1,0,1]
-        ];
+        let neighborhood: [[u8; 3]; 3] = [[1, 0, 1], [0, 1, 0], [1, 0, 1]];
 
         let convolution_output: u8 = convolution(neighborhood);
 
         assert_eq!(
-            convolution_output, 
-            4_u8,
+            convolution_output, 4_u8,
             "Expected 4, got {}.",
             convolution_output,
         );
@@ -225,12 +290,7 @@ mod tests {
 
         let rule_output: u8 = rule(neighborhood_sum, cell_state);
 
-        assert_eq!(
-            rule_output, 
-            1_u8,
-            "Expected 1, got {}.",
-            rule_output,
-        );
+        assert_eq!(rule_output, 1_u8, "Expected 1, got {}.", rule_output,);
     }
 
     #[test]
@@ -240,12 +300,7 @@ mod tests {
 
         let rule_output: u8 = rule(neighborhood_sum, cell_state);
 
-        assert_eq!(
-            rule_output, 
-            0_u8,
-            "Expected 0, got {}.",
-            rule_output,
-        );
+        assert_eq!(rule_output, 0_u8, "Expected 0, got {}.", rule_output,);
     }
 
     #[test]
@@ -255,12 +310,7 @@ mod tests {
 
         let rule_output: u8 = rule(neighborhood_sum, cell_state);
 
-        assert_eq!(
-            rule_output, 
-            0_u8,
-            "Expected 0, got {}.",
-            rule_output,
-        );
+        assert_eq!(rule_output, 0_u8, "Expected 0, got {}.", rule_output,);
     }
 
     #[test]
@@ -270,12 +320,7 @@ mod tests {
 
         let rule_output: u8 = rule(neighborhood_sum, cell_state);
 
-        assert_eq!(
-            rule_output, 
-            0_u8,
-            "Expected 0, got {}.",
-            rule_output,
-        );
+        assert_eq!(rule_output, 0_u8, "Expected 0, got {}.", rule_output,);
     }
 
     #[test]
@@ -285,12 +330,7 @@ mod tests {
 
         let rule_output: u8 = rule(neighborhood_sum, cell_state);
 
-        assert_eq!(
-            rule_output, 
-            1_u8,
-            "Expected 1, got {}.",
-            rule_output,
-        );
+        assert_eq!(rule_output, 1_u8, "Expected 1, got {}.", rule_output,);
     }
 
     #[test]
@@ -300,11 +340,6 @@ mod tests {
 
         let rule_output: u8 = rule(neighborhood_sum, cell_state);
 
-        assert_eq!(
-            rule_output, 
-            0_u8,
-            "Expected 0, got {}.",
-            rule_output,
-        );
+        assert_eq!(rule_output, 0_u8, "Expected 0, got {}.", rule_output,);
     }
 }
