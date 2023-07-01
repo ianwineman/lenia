@@ -5,7 +5,7 @@ use std::fs;
 use std::str;
 use rand::Rng;
 
-pub const WORLD_SIZE: usize = 512;
+pub const WORLD_SIZE: usize = 512; // 1088 is max
 
 
 pub struct World {
