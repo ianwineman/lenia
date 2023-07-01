@@ -77,10 +77,16 @@ impl World {
 
     pub fn new_from_rle(path: &str) -> World {
         let file_string: String = fs::read_to_string(path).expect("Unable to read file.");
-        let mut file_string_split: Vec<&str> = file_string.split(":").collect();
-        let rle_str: &str = file_string_split.pop().unwrap();
+        let caps = Regex::new(r"^(>(?P<annotation>.+)\n)?(?P<size>\d+)::(?P<rle>[0-9ad]+)").unwrap().captures(&file_string).unwrap();
 
-        if file_string_split[0].to_string().parse::<usize>().unwrap() != WORLD_SIZE {
+        match caps.name("annotation") {
+            Some(_) => println!(">{}\n", caps.name("annotation").unwrap().as_str()),
+            None => {},
+        }
+
+        let rle_str: &str = caps.name("rle").unwrap().as_str();
+
+        if caps.name("size").unwrap().as_str().to_string().parse::<usize>().unwrap() != WORLD_SIZE {
             println!("Pattern size does not equal WORLD_SIZE, creating blank world.");
 
             return World {
@@ -90,16 +96,16 @@ impl World {
 
         let mut decoded_flat_vec: Vec<u8> = Vec::new();
 
-        for caps in Regex::new(r"(?P<num>\d+)(?P<state>a|d)")
+        for cap in Regex::new(r"(?P<num>\d+)(?P<state>a|d)")
             .unwrap()
             .captures_iter(rle_str)
         {
-            let num: u8 = caps["num"].to_string().parse::<u8>().unwrap();
+            let num: u32 = cap["num"].to_string().parse::<u32>().unwrap();
 
             for _ in 0..num {
-                if &caps["state"] == "a" {
+                if &cap["state"] == "a" {
                     decoded_flat_vec.push(1);
-                } else if &caps["state"] == "d" {
+                } else if &cap["state"] == "d" {
                     decoded_flat_vec.push(0);
                 } else {
                     panic!();
