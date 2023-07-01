@@ -3,8 +3,9 @@ use std::str;
 use std::fs;
 use std::convert::TryFrom;
 use regex::Regex;
+use rand::Rng;
 
-pub const WORLD_SIZE: usize = 16;
+pub const WORLD_SIZE: usize = 512;
 
 pub struct World {
     pub map: [[u8; WORLD_SIZE]; WORLD_SIZE],
@@ -20,6 +21,21 @@ impl World {
     pub fn new(seed: [[u8; WORLD_SIZE]; WORLD_SIZE]) -> World {
         World {
             map: seed
+        }
+    }
+
+    pub fn new_random() -> World {
+        let mut rng = rand::thread_rng();
+        let mut world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = [[0; WORLD_SIZE]; WORLD_SIZE];
+
+        for x in 0..WORLD_SIZE {
+            for y in 0..WORLD_SIZE {
+                world_map[x][y] += rng.gen_range(0..2);
+            }
+        }
+
+        World {
+            map: world_map,
         }
     }
 

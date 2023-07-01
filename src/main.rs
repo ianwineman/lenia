@@ -5,6 +5,11 @@
 mod gol;
 use gol::*;
 
+use image::*;
+use image::Rgba;
+
+use rand::Rng;
+
 extern crate piston;
 use piston::WindowSettings;
 use piston::event_loop::{EventSettings, Events, EventLoop};
@@ -22,7 +27,7 @@ extern crate graphics;
 
 extern crate opengl_graphics;
 use opengl_graphics::{GlGraphics, OpenGL};
-//use opengl_graphics::{Filter, GlyphCache, TextureSettings};
+use opengl_graphics::{Filter, GlyphCache, TextureSettings, Texture};
 
 type Color = [f32; 4];
 const RED: Color = [1.0, 0.0, 0.0, 1.0];
@@ -32,8 +37,8 @@ const WHITE: Color = [1.0; 4];
 const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
 
 const WINDOW_SIZE: i32 = 512;
-const SCALE_FACTOR: f64 = 32.0;
-const GRID_SIZE: i32 = WINDOW_SIZE / SCALE_FACTOR as i32; 
+//const SCALE_FACTOR: f64 = 32.0;
+//const GRID_SIZE: i32 = WINDOW_SIZE / SCALE_FACTOR as i32; 
 
 fn main() {
     let opengl = OpenGL::V3_2;
@@ -42,8 +47,19 @@ fn main() {
     let mut gl = GlGraphics::new(opengl);
 
     let mut mouse_coords = [0.0; 2];
-    let mut world: World = World::new_from_rle("patterns/pulsar1.txt");
-    world.save("patterns/test.txt");
+    let mut world: World = World::new_random();
+    //world.save("patterns/test.txt");
+
+    //init texture
+    let mut canvas = ImageBuffer::new(WINDOW_SIZE as u32, WINDOW_SIZE as u32);
+    let val:u32 = canvas.width();
+
+    let mut rng = rand::thread_rng(); //remove if necessary 
+
+    let mut texture = Texture::from_image(
+            &canvas,
+            &TextureSettings::new()
+        );
 
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
@@ -53,14 +69,15 @@ fn main() {
                 match k.button {
                     Button::Keyboard(Key::Space) => world.step_forward(),
                     Button::Mouse(MouseButton::Left) => {
-                        let grid_pos_row = (mouse_coords[1] / SCALE_FACTOR).floor() as usize;
-                        let grid_pos_col = (mouse_coords[0] / SCALE_FACTOR).floor() as usize;
-                        println!("row: {0}  col: {1}", grid_pos_row, grid_pos_col);
-                        world.update_cell(grid_pos_row, grid_pos_col);
+                        //let grid_pos_row = (mouse_coords[1]).floor() as usize;
+                        //let grid_pos_col = (mouse_coords[0]).floor() as usize;
+                        //println!("row: {0}  col: {1}", grid_pos_row, grid_pos_col);
+                        //world.update_cell(grid_pos_row, grid_pos_col);
                     }
                     _ => ()
                 }
             }
+            //add functionality for holding down mouse or button on hold
         }
         // mouse events
         if let Some(m) = e.mouse_cursor_args() {
@@ -70,32 +87,20 @@ fn main() {
         if let Some(r) = e.render_args() {
             gl.draw(r.viewport(), |_c, g| {
                 graphics::clear(BLUE, g);
+                for i in 0..val {
+                    for j in 0..val {
 
-                for i in 0..WORLD_SIZE {
-                    for j in 0..WORLD_SIZE {
-                        let tile_pos: [f64; 4] = [
-                            SCALE_FACTOR * i as f64,
-                            SCALE_FACTOR * j as f64,
-                            SCALE_FACTOR * (i+1) as f64,
-                            SCALE_FACTOR * (j+1) as f64
-                        ];
-
-                        if world.map[j as usize][i as usize] == 1 {
-                            graphics::Rectangle::new(WHITE).draw(
-                                tile_pos,
-                                &_c.draw_state,
-                                _c.transform,
-                                g);
-                        } else {
-                            graphics::Rectangle::new(BLACK).draw(
-                                tile_pos,
-                                &_c.draw_state,
-                                _c.transform,
-                                g)
+                        match world.map[i as usize][j as usize] {
+                            1 => {canvas.put_pixel(i, j, Rgba([255, 255, 255, 255])  ); },
+                            0 => {canvas.put_pixel(i, j, Rgba([0, 0, 0, 255])  ); },
+                            _ => ()
                         }
-                    }
-                }
+                    };
+                };
 
+                texture.update(&canvas);
+
+                graphics::image(&texture, _c.transform, g);
             });
         }
     }
