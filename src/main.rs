@@ -30,8 +30,6 @@ extern crate opengl_graphics;
 use opengl_graphics::{GlGraphics, OpenGL};
 use opengl_graphics::{Filter, GlyphCache, TextureSettings, Texture};
 use uuid::Uuid;
-use std::{thread, time};
-
 
 type Color = [f32; 4];
 const RED: Color = [1.0, 0.0, 0.0, 1.0];
@@ -39,6 +37,20 @@ const GREEN: Color = [0.0, 1.0, 0.0, 1.0];
 const BLUE: Color = [0.0, 0.0, 1.0, 1.0];
 const WHITE: Color = [1.0; 4];
 const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
+
+const USER_MANUAL: &str = "Lenia User Manual:
+Press 'b' to create a blank world
+Press 'c' to toggle the speed controls for continuous stepping
+Press 'esc' to quit
+Press 'h' to print User Manual
+Press 'n' to create a random world
+Press 'o' to create a blank world with a random creature
+Press 'r' to reset to last saved pattern (input pattern if no saves made)
+Press 'Right_Arrow' to step forward
+Press 's' to save current pattern.
+Press 'Space' to toggle continuous stepping
+Press '+' to increase the speed of continuous stepping
+Press '-' to decrease the speed of continuous stepping";
 
 const WINDOW_SIZE: i32 = 512;
 
@@ -69,6 +81,9 @@ fn main() {
         );
 
     let mut loop_: bool = false;
+    let mut use_counter = true;
+    let mut counter: i32 = 0;
+    let mut counter_max: i32 = 10;
 
     let mut event_settings = EventSettings::new();
     event_settings.lazy = false; // enable idle events
@@ -79,10 +94,18 @@ fn main() {
         // idle events
         if let Some(_i) = e.idle_args() {
             if loop_ {
-                world.step_forward();
-
-                thread::sleep(time::Duration::from_millis(5)); // see issue 23
-
+                if use_counter {
+                    if counter < counter_max {
+                        counter += 1;
+                    }
+                    else {
+                        counter = 0;
+                        world.step_forward();
+                    }
+                }
+                else {
+                    world.step_forward(); // step as fast as possible
+                }
             }
         }
 
@@ -90,7 +113,24 @@ fn main() {
         if let Some(k) = e.button_args() {
             if k.state == ButtonState::Press {
                 match k.button {
-                    Button::Keyboard(Key::H) => println!("\nLenia User Manual:\nPress 'b' to create a blank world\nPress 'n' to create a random world\nPress 'o' to create a blank world with a random creature\nPress 's' to save current pattern.\nPress 'r' to reset to last saved pattern (input pattern if no saves made)\nPress 'Right_Arrow' to step forward\nPress 'Space' to toggle continuous stepping\nPress 'esc' to quit"),
+                    Button::Keyboard(Key::H) => println!("{}", USER_MANUAL),
+                    Button::Keyboard(Key::C) => {
+                        match use_counter {
+                            true => use_counter = false,
+                            false => {
+                                use_counter = true;
+                                counter = 0;
+                            },
+                        }
+                    }
+                    Button::Keyboard(Key::Equals) => {
+                        if counter > 0 {
+                            counter_max -= 1;
+                        }
+                    },
+                    Button::Keyboard(Key::Minus) => {
+                        counter_max += 1;
+                    },
                     Button::Keyboard(Key::N) => {
                         world = World::new_random();
                     }
