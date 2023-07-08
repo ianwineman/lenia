@@ -5,7 +5,7 @@ use std::fs;
 use std::str;
 use rand::Rng;
 
-pub const WORLD_SIZE: usize = 512;
+pub const WORLD_SIZE: usize = 512; // 1088 is max
 
 
 pub struct World {
@@ -77,50 +77,75 @@ impl World {
 
     pub fn new_from_rle(path: &str) -> World {
         let file_string: String = fs::read_to_string(path).expect("Unable to read file.");
-        let mut file_string_split: Vec<&str> = file_string.split(":").collect();
-        let rle_str: &str = file_string_split.pop().unwrap();
 
-        if file_string_split[0].to_string().parse::<usize>().unwrap() != WORLD_SIZE {
-            println!("Pattern size does not equal WORLD_SIZE, creating blank world.");
+        // regex
+        //     optionally finds annotation with annotation matching group
+        //     finds size of pattern with size matching group
+        //     finds run length encoding of pattern with rle matching group
+        let caps = Regex::new(r"^(>(?P<annotation>.+)\n)?(?P<size>\d+)::(?P<rle>[0-9ad]+)").unwrap().captures(&file_string).unwrap();
+
+        match caps.name("annotation") {
+            Some(_) => println!(">{}\n", caps.name("annotation").unwrap().as_str()),
+            None => {},
+        }
+
+        let rle_str: &str = caps.name("rle").unwrap().as_str();
+
+        let size: usize = caps.name("size").unwrap().as_str().to_string().parse::<usize>().unwrap();
+
+        if size > WORLD_SIZE {
+            println!("Pattern size greater than WORLD_SIZE, creating blank world.");
 
             return World {
                 map: [[0; WORLD_SIZE]; WORLD_SIZE],
             }
         }
+        else if size < WORLD_SIZE {
+            // pad string
+            // todo!();
 
-        let mut decoded_flat_vec: Vec<u8> = Vec::new();
-
-        for caps in Regex::new(r"(?P<num>\d+)(?P<state>a|d)")
-            .unwrap()
-            .captures_iter(rle_str)
-        {
-            let num: u8 = caps["num"].to_string().parse::<u8>().unwrap();
-
-            for _ in 0..num {
-                if &caps["state"] == "a" {
-                    decoded_flat_vec.push(1);
-                } else if &caps["state"] == "d" {
-                    decoded_flat_vec.push(0);
-                } else {
-                    panic!();
-                }
+            return World {
+                map: [[0; WORLD_SIZE]; WORLD_SIZE],
             }
         }
+        else {
+            let mut decoded_flat_vec: Vec<u8> = Vec::new();
 
-        let mut twod_vec: Vec<&[u8]> = Vec::new();
+            // regex
+            //     finds number of cells of given type with num matching group
+            //     finds cell state for given cells with state matching group
+            for cap in Regex::new(r"(?P<num>\d+)(?P<state>a|d)")
+                .unwrap()
+                .captures_iter(rle_str)
+            {
+                let num: u32 = cap["num"].to_string().parse::<u32>().unwrap();
 
-        for i in 0..WORLD_SIZE {
-            twod_vec.push(&decoded_flat_vec[i * WORLD_SIZE..(i + 1) * WORLD_SIZE]);
+                for _ in 0..num {
+                    if &cap["state"] == "a" {
+                        decoded_flat_vec.push(1);
+                    } else if &cap["state"] == "d" {
+                        decoded_flat_vec.push(0);
+                    } else {
+                        panic!();
+                    }
+                }
+            }
+
+            let mut twod_vec: Vec<&[u8]> = Vec::new();
+
+            for i in 0..WORLD_SIZE {
+                twod_vec.push(&decoded_flat_vec[i * WORLD_SIZE..(i + 1) * WORLD_SIZE]);
+            }
+
+            let world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = twod_vec
+                .into_iter()
+                .map(|slice| slice.try_into().unwrap())
+                .collect::<Vec<[u8; WORLD_SIZE]>>()
+                .try_into()
+                .unwrap();
+
+            World { map: world_map }
         }
-
-        let world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = twod_vec
-            .into_iter()
-            .map(|slice| slice.try_into().unwrap())
-            .collect::<Vec<[u8; WORLD_SIZE]>>()
-            .try_into()
-            .unwrap();
-
-        World { map: world_map }
     }
 
     pub fn to_rle(&self) -> String {

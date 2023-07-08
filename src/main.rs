@@ -44,7 +44,7 @@ const WINDOW_SIZE: i32 = 512;
 
 //const SCALE_FACTOR: f64 = 32.0;
 //const GRID_SIZE: i32 = WINDOW_SIZE / SCALE_FACTOR as i32;
-const INPUT_FILE: &str = "patterns/13c787db-82b0-4c3d-9007-12c24cf74fc2.lenia";
+const INPUT_FILE: &str = "patterns/2673baaa-0393-4540-90e3-05699881a02c.lenia";
 
 
 fn main() {
@@ -55,8 +55,9 @@ fn main() {
 
     //let mut mouse_coords = [0.0; 2];
 
-    let mut world: World = World::new_random();
-    //world.save("patterns/test.txt");
+    let mut saves: String = String::from(INPUT_FILE);
+    println!("World starting point: {}", saves);
+    let mut world: World = World::new_from_rle(INPUT_FILE);
 
     //init texture
     let mut canvas = ImageBuffer::new(WINDOW_SIZE as u32, WINDOW_SIZE as u32);
@@ -66,10 +67,6 @@ fn main() {
             &canvas,
             &TextureSettings::new()
         );
-
-    //let mut world: World = World::new_from_rle(INPUT_FILE);
-    let mut saves: String = String::from(INPUT_FILE);
-    println!("World starting point: {}", saves);
 
     let mut loop_: bool = false;
 
@@ -83,7 +80,9 @@ fn main() {
         if let Some(_i) = e.idle_args() {
             if loop_ {
                 world.step_forward();
+
                 thread::sleep(time::Duration::from_millis(5)); // see issue 23
+
             }
         }
 
@@ -128,7 +127,7 @@ fn main() {
                         let path: String = format!("patterns/{}.lenia", uuid.hyphenated().to_string());
                         saves = path.clone();
                         world.save(&path);
-                        println!("World starting point: {}", saves);
+                        println!("World save point: {}", saves);
                     }
                     _ => (),
                 }
