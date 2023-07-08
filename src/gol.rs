@@ -176,8 +176,17 @@ impl World {
     }
 
     pub fn step_forward(&mut self) {
-        let mut world_with_buffer: [[u8; WORLD_SIZE + 2]; WORLD_SIZE + 2] =
-            [[0; WORLD_SIZE + 2]; WORLD_SIZE + 2];
+        let mut world_with_buffer: [[u8; WORLD_SIZE + 2]; WORLD_SIZE + 2] = [[0; WORLD_SIZE + 2]; WORLD_SIZE + 2];
+
+        // World wrap
+        for y in 0..WORLD_SIZE {
+            world_with_buffer[0][y + 1] = self.map[WORLD_SIZE - 1][y];
+            world_with_buffer[WORLD_SIZE + 1][y + 1] = self.map[0][y];
+        }
+        for x in 0..WORLD_SIZE {
+            world_with_buffer[x + 1][0] = self.map[x][WORLD_SIZE - 1];
+            world_with_buffer[x + 1][WORLD_SIZE + 1] = self.map[x][0];
+        }
 
         for x in 0..WORLD_SIZE {
             for y in 0..WORLD_SIZE {
