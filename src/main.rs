@@ -80,7 +80,9 @@ fn main() {
         if let Some(_i) = e.idle_args() {
             if loop_ {
                 world.step_forward();
-                thread::sleep(time::Duration::from_millis(5));
+
+                thread::sleep(time::Duration::from_millis(5)); // see issue 23
+
             }
         }
 
