@@ -101,12 +101,53 @@ impl World {
             }
         }
         else if size < WORLD_SIZE {
-            // pad string
-            // todo!();
+            let mut world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = [[0; WORLD_SIZE]; WORLD_SIZE];
 
-            return World {
-                map: [[0; WORLD_SIZE]; WORLD_SIZE],
+            let mut decoded_flat_vec: Vec<u8> = Vec::new();
+
+            // regex
+            //     finds number of cells of given type with num matching group
+            //     finds cell state for given cells with state matching group
+            for cap in Regex::new(r"(?P<num>\d+)(?P<state>a|d)")
+                .unwrap()
+                .captures_iter(rle_str)
+            {
+                let num: u32 = cap["num"].to_string().parse::<u32>().unwrap();
+
+                for _ in 0..num {
+                    if &cap["state"] == "a" {
+                        decoded_flat_vec.push(1);
+                    } else if &cap["state"] == "d" {
+                        decoded_flat_vec.push(0);
+                    } else {
+                        panic!();
+                    }
+                }
             }
+
+            let mut twod_vec: Vec<Vec<u8>> = Vec::new();
+
+            for i in 0..size {
+                twod_vec.push(decoded_flat_vec[i * size..(i + 1) * size].to_vec());
+            }
+
+            let mut z = WORLD_SIZE - size;
+
+            if z % 2 == 0 {
+                z /= 2;
+            }
+            else {
+                z -= 1;
+                z /= 2;
+            }
+
+            for x in 0..size {
+                for y in 0..size {
+                    world_map[x + z][y + z] = twod_vec[x][y];
+                }
+            }
+
+            World { map: world_map }
         }
         else {
             let mut decoded_flat_vec: Vec<u8> = Vec::new();

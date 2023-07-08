@@ -56,7 +56,8 @@ const WINDOW_SIZE: i32 = 512;
 
 //const SCALE_FACTOR: f64 = 32.0;
 //const GRID_SIZE: i32 = WINDOW_SIZE / SCALE_FACTOR as i32;
-const INPUT_FILE: &str = "patterns/2673baaa-0393-4540-90e3-05699881a02c.lenia";
+//const INPUT_FILE: &str = "patterns/2673baaa-0393-4540-90e3-05699881a02c.lenia";
+const INPUT_FILE: &str = "patterns/pulsar1.lenia";
 
 
 fn main() {
