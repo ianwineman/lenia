@@ -4,54 +4,58 @@ use std::fmt;
 use std::fs;
 use std::str;
 use rand::Rng;
+use std::cmp;
 
-pub const WORLD_SIZE: usize = 100; // 1088 is max
-
+pub const WORLD_SIZE: [usize; 2] = [100, 100];
 
 pub struct World {
-    pub map: [[u8; WORLD_SIZE]; WORLD_SIZE],
+    pub map: [[u8; WORLD_SIZE[1]]; WORLD_SIZE[0]],
+    pub view_arr : [i64 ; 4],
 }
 
 impl World {
     pub fn new_empty() -> World {
         World {
-            map: [[0; WORLD_SIZE]; WORLD_SIZE],
+            map: [[0; WORLD_SIZE[1]]; WORLD_SIZE[0]],
+            view_arr: [0, 0, WORLD_SIZE[0] as i64, WORLD_SIZE[1] as i64]
         }
     }
 
     pub fn new_random() -> World {
         let mut rng = rand::thread_rng();
-        let mut world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = [[0; WORLD_SIZE]; WORLD_SIZE];
+        let mut world_map: [[u8; WORLD_SIZE[1]]; WORLD_SIZE[0]] = [[0; WORLD_SIZE[1]]; WORLD_SIZE[0]];
 
-        for x in 0..WORLD_SIZE {
-            for y in 0..WORLD_SIZE {
+        for x in 0..WORLD_SIZE[0] {
+            for y in 0..WORLD_SIZE[1] {
                 world_map[x][y] += rng.gen_range(0..2);
             }
         }
 
         World {
             map: world_map,
+            view_arr: [0, 0, WORLD_SIZE[0] as i64, WORLD_SIZE[1] as i64]
         }
     }
 
     pub fn new_creature(width: usize) -> World {
-        if WORLD_SIZE < width + 6 {
+        if cmp::min(WORLD_SIZE[0], WORLD_SIZE[1]) < width + 6 {
             println!("WORLD_SIZE too small, creating blank world.");
 
             return World {
-                map: [[0; WORLD_SIZE]; WORLD_SIZE],
+                map: [[0; WORLD_SIZE[1]]; WORLD_SIZE[0]],
+                view_arr: [0, 0, WORLD_SIZE[0] as i64, WORLD_SIZE[1] as i64]
             }
         }
 
         let mut rng = rand::thread_rng();
-        let mut world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = [[0; WORLD_SIZE]; WORLD_SIZE];
-        let buffer_total: usize = WORLD_SIZE - width;
+        let mut world_map: [[u8; WORLD_SIZE[1]]; WORLD_SIZE[0]] = [[0; WORLD_SIZE[1]]; WORLD_SIZE[0]];
+        let buffer_total: usize = cmp::min(WORLD_SIZE[0], WORLD_SIZE[1]) - width;
 
         if buffer_total % 2 == 0 {
             let buffer_width = buffer_total/2;
 
-            for x in buffer_width..(WORLD_SIZE-buffer_width) {
-                for y in buffer_width..(WORLD_SIZE-buffer_width) {
+            for x in buffer_width..(WORLD_SIZE[0]-buffer_width) {
+                for y in buffer_width..(WORLD_SIZE[1]-buffer_width) {
                     world_map[x][y] += rng.gen_range(0..2);
                 }
             }
@@ -59,8 +63,8 @@ impl World {
         else {
             let buffer_width = (buffer_total - 1)/2;
 
-            for x in buffer_width..(WORLD_SIZE-buffer_width) {
-                for y in buffer_width..(WORLD_SIZE-buffer_width) {
+            for x in buffer_width..(WORLD_SIZE[0]-buffer_width) {
+                for y in buffer_width..(WORLD_SIZE[1]-buffer_width) {
                     world_map[x][y] += rng.gen_range(0..2);
                 }
             }
@@ -68,11 +72,14 @@ impl World {
 
         World {
             map: world_map,
+            view_arr: [0, 0, WORLD_SIZE[0] as i64, WORLD_SIZE[1] as i64]
         }
     }
 
-    pub fn new(seed: [[u8; WORLD_SIZE]; WORLD_SIZE]) -> World {
-        World { map: seed }
+    pub fn new(seed: [[u8; WORLD_SIZE[1]]; WORLD_SIZE[0]]) -> World {
+        World { map: seed,
+                view_arr: [0, 0, WORLD_SIZE[0] as i64, WORLD_SIZE[1] as i64] 
+            }
     }
 
     pub fn new_from_rle(path: &str) -> World {
@@ -93,19 +100,21 @@ impl World {
 
         let size: usize = caps.name("size").unwrap().as_str().to_string().parse::<usize>().unwrap();
 
-        if size > WORLD_SIZE {
+        if size > cmp::min(WORLD_SIZE[0], WORLD_SIZE[1]) {
             println!("Pattern size greater than WORLD_SIZE, creating blank world.");
 
             return World {
-                map: [[0; WORLD_SIZE]; WORLD_SIZE],
+                map: [[0; WORLD_SIZE[1]]; WORLD_SIZE[0]],
+                view_arr: [0, 0, WORLD_SIZE[0] as i64, WORLD_SIZE[1] as i64]
             }
         }
-        else if size < WORLD_SIZE {
+        else if size < cmp::min(WORLD_SIZE[0], WORLD_SIZE[1]) {
             // pad string
             // todo!();
 
             return World {
-                map: [[0; WORLD_SIZE]; WORLD_SIZE],
+                map: [[0; WORLD_SIZE[1]]; WORLD_SIZE[0]],
+                view_arr: [0, 0, WORLD_SIZE[0] as i64, WORLD_SIZE[1] as i64]
             }
         }
         else {
@@ -133,23 +142,25 @@ impl World {
 
             let mut twod_vec: Vec<&[u8]> = Vec::new();
 
-            for i in 0..WORLD_SIZE {
-                twod_vec.push(&decoded_flat_vec[i * WORLD_SIZE..(i + 1) * WORLD_SIZE]);
+            for i in 0..WORLD_SIZE[1] {
+                twod_vec.push(&decoded_flat_vec[i * WORLD_SIZE[1]..(i + 1) * WORLD_SIZE[0]]);
             }
 
-            let world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = twod_vec
+            let world_map: [[u8; WORLD_SIZE[1]]; WORLD_SIZE[0]] = twod_vec
                 .into_iter()
                 .map(|slice| slice.try_into().unwrap())
-                .collect::<Vec<[u8; WORLD_SIZE]>>()
+                .collect::<Vec<[u8; WORLD_SIZE[0]]>>()
                 .try_into()
                 .unwrap();
 
-            World { map: world_map }
+            World { map: world_map, 
+                    view_arr: [0, 0, WORLD_SIZE[0] as i64, WORLD_SIZE[1] as i64]
+             }
         }
     }
 
     pub fn to_rle(&self) -> String {
-        let map: [[u8; WORLD_SIZE]; WORLD_SIZE] = self.map;
+        let map: [[u8; WORLD_SIZE[1]]; WORLD_SIZE[0]] = self.map;
         let mut scan_line: String = String::new();
 
         for row in map {
@@ -162,7 +173,7 @@ impl World {
             }
         }
 
-        let mut rle: String = (WORLD_SIZE as u32).to_string();
+        let mut rle: String = (WORLD_SIZE[1] as u32).to_string();
         rle.push_str("::");
         rle.push_str(&run_length_encoding(scan_line));
 
@@ -176,17 +187,17 @@ impl World {
     }
 
     pub fn step_forward(&mut self) {
-        let mut world_with_buffer: [[u8; WORLD_SIZE + 2]; WORLD_SIZE + 2] =
-            [[0; WORLD_SIZE + 2]; WORLD_SIZE + 2];
+        let mut world_with_buffer: [[u8; WORLD_SIZE[1] + 2]; WORLD_SIZE[0] + 2] =
+            [[0; WORLD_SIZE[1] + 2]; WORLD_SIZE[0] + 2];
 
-        for x in 0..WORLD_SIZE {
-            for y in 0..WORLD_SIZE {
+        for x in 0..WORLD_SIZE[0] {
+            for y in 0..WORLD_SIZE[1] {
                 world_with_buffer[x + 1][y + 1] = self.map[x][y];
             }
         }
 
-        for x in 0..WORLD_SIZE {
-            for y in 0..WORLD_SIZE {
+        for x in 0..WORLD_SIZE[0] {
+            for y in 0..WORLD_SIZE[1] {
                 let neighborhood: [[u8; 3]; 3] = [
                     [
                         world_with_buffer[x][y],

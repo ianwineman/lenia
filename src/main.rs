@@ -19,7 +19,7 @@ use piston::{
     Motion::MouseCursor,
     WindowSettings,
     ButtonEvent, Input, Motion, MouseCursorEvent, RenderEvent,
-    IdleEvent, MouseScrollEvent, IdleEvent, MouseScrollEvent
+    IdleEvent, MouseScrollEvent
 };
 
 use graphics::{
@@ -42,7 +42,8 @@ const WHITE: Color = [1.0; 4];
 const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
 
 const WINDOW_SIZE: [i32; 2] = [640, 480];
-const WORLD_SIZE: [i32; 2] = [80, 60];
+const WORLD_SIZE: [i32; 2] = [40, 30];
+const INIT_SCALE_FACTOR : f64 = 16.0;
 
 //const SCALE_FACTOR: f64 = 32.0;
 //const GRID_SIZE: i32 = WINDOW_SIZE / SCALE_FACTOR as i32;
@@ -52,12 +53,12 @@ const INPUT_FILE: &str = "patterns/2673baaa-0393-4540-90e3-05699881a02c.lenia";
 fn main() {
     //render vals
     let mut mouse_pos = [0.0, 0.0];
-    let mut scale_factor: f32 = 8.0;
+    let mut scale_factor: f64 = INIT_SCALE_FACTOR;
 
     //piston init
     let opengl = OpenGL::V3_2;
     //let settings = WindowSettings::new(  "Lenia", [WINDOW_SIZE as f64; 2]  ).exit_on_esc(true);
-    let settings = WindowSettings::new(  "Lenia", [WINDOW_SIZE[1] as f64, WINDOW_SIZE[0] as f64]  ).exit_on_esc(true);
+    let settings = WindowSettings::new(  "Lenia", [WINDOW_SIZE[0] as f64, WINDOW_SIZE[1] as f64]  ).exit_on_esc(true);
     let mut window: GlutinWindow = settings.build().expect("Could not create window");
     let mut gl = GlGraphics::new(opengl);
 
@@ -158,53 +159,81 @@ fn main() {
             //println!("{:?}", s );
             match s[1] {
                 -1.0 => { 
-                    scale_factor -= 0.1_f32;
-                    if scale_factor < 1.0 {
-                        scale_factor = 1.0;
+                    scale_factor -= 0.5_f64;
+                    if scale_factor < INIT_SCALE_FACTOR {
+                        scale_factor = INIT_SCALE_FACTOR;
                     }
                  },
 
-                 1.0 => {scale_factor += 0.1_f32;},
+                 1.0 => {scale_factor += 0.5_f64;},
 
                  _ => ()
             }
             //println!("before: {:?}", scale_factor );
-            scale_factor *= 100.0_f32;
+            scale_factor *= 100.0_f64;
             scale_factor = scale_factor.round();
-            scale_factor = scale_factor / 100.0_f32;
+            scale_factor = scale_factor / 100.0_f64;
             //println!("after: {:?}\n", scale_factor );
-        }
+
+            let view = [ (WINDOW_SIZE[0] as f64 / scale_factor).floor() as i64 , (WINDOW_SIZE[1] as f64 / scale_factor).floor() as i64 ];
+            let mut x0 = ((mouse_pos[0] / scale_factor).floor() as i64 - (view[0] / 2)) as i64;
+            let mut x1 = ((mouse_pos[0] / scale_factor).ceil() as i64 + (view[0] / 2)) as i64;
+            let mut y0 = ((mouse_pos[1] / scale_factor).floor() as i64 - (view[1] / 2)) as i64;
+            let mut y1 = ((mouse_pos[1] / scale_factor).ceil() as i64 + (view[1] / 2)) as i64;
+
+            if x0 < 0 {
+                x0 = 0;
+                x1 = view[0];
+            } else if x1 > WORLD_SIZE[0] as i64 {
+                x0 = WORLD_SIZE[0] as i64 - view[0];
+                x1 = WORLD_SIZE[0] as i64;
+            };
+
+            if y0 < 0 {
+                y0 = 0;
+                y1 = view[1];
+            } else if y1 > WORLD_SIZE[1] as i64 {
+                y0 = WORLD_SIZE[1] as i64 - view[1];
+                y1 = WORLD_SIZE[1] as i64;
+            };
+
+            world.view_arr = [x0, y0, x1, y1];
+    }
 
         //render loop
         if let Some(r) = e.render_args() {
             gl.draw(r.viewport(), |_c, g| {
                 graphics::clear(BLUE, g);
+                
 
-                let view = [ (WINDOW_SIZE[0] / scale_factor).floor() , (WINDOW_SIZE[1] / scale_factor).floor() ];
-                let mut x0 = (mouse_pos[0] / scale_factor) - (view[0] / 2);
-                let mut x1 = (mouse_pos[0] / scale_factor) + (view[0] / 2);
-                let mut y0 = (mouse_pos[1] / scale_factor) - (view[1] / 2);
-                let mut y1 = (mouse_pos[1] / scale_factor) + (view[1] / 2);
+                let (x0, y0, x1, y1) = (world.view_arr[0], world.view_arr[1], world.view_arr[2], world.view_arr[3]);
+                println!("{:?} \n {:?} \n", scale_factor, world.view_arr );
+                for i in x0..x1 {
+                    for j in y0..y1 {
+                        let tile_pos: [f64; 4] = [
+                            scale_factor * i as f64,
+                            scale_factor * j as f64,
+                            scale_factor * (i + 1) as f64,
+                            scale_factor * (j + 1) as f64,
+                        ];
 
-                if x0 < 0.0 {
-                    x0 = 0.0;
-                    x1 = view[0];
-                } else if x1 > WORLD_SIZE[0] {
-                    x0 = WORLD_SIZE[0] - view[0];
-                    x1 = WORLD_SIZE[0];
-                };
-
-                if y0 < 0.0 {
-                    y0 = 0.0;
-                    y1 = view[1];
-                } else if y1 > WORLD_SIZE[1] {
-                    y0 = WORLD_SIZE[1] - view[1];
-                    y1 = WORLD_SIZE[1];
-                };
-
-                //todo collect data from world 
-
-
+                        if world.map[j as usize][i as usize] == 1 {
+                            graphics::Rectangle::new(WHITE).draw(
+                                tile_pos,
+                                &_c.draw_state,
+                                _c.transform,
+                                g,
+                            );
+                        } else {
+                            graphics::Rectangle::new(BLACK).draw(
+                                tile_pos,
+                                &_c.draw_state,
+                                _c.transform,
+                                g,
+                            )
+                        }
+                    }
+                }
 
             });
         }
