@@ -19,7 +19,7 @@ use piston::{
     Motion::MouseCursor,
     WindowSettings,
     ButtonEvent, Input, Motion, MouseCursorEvent, RenderEvent,
-    IdleEvent, MouseScrollEvent, IdleEvent, MouseScrollEvent
+    IdleEvent, MouseScrollEvent
 };
 
 use graphics::{
@@ -68,7 +68,7 @@ fn main() {
     let mut world: World = World::new_random();
 
     //init texture
-    /* 
+    /*
     let mut canvas = ImageBuffer::new(WINDOW_SIZE as u32, WINDOW_SIZE as u32);
     let val:u32 = canvas.width();
 
@@ -77,7 +77,7 @@ fn main() {
             &TextureSettings::new()
         );
     */
-    
+
     //event loop vars
     let mut loop_: bool = false;
     let mut event_settings = EventSettings::new();
@@ -157,7 +157,7 @@ fn main() {
         if let Some(s) = e.mouse_scroll_args() {
             //println!("{:?}", s );
             match s[1] {
-                -1.0 => { 
+                -1.0 => {
                     scale_factor -= 0.1_f32;
                     if scale_factor < 1.0 {
                         scale_factor = 1.0;
@@ -180,29 +180,29 @@ fn main() {
             gl.draw(r.viewport(), |_c, g| {
                 graphics::clear(BLUE, g);
 
-                let view = [ (WINDOW_SIZE[0] / scale_factor).floor() , (WINDOW_SIZE[1] / scale_factor).floor() ];
-                let mut x0 = (mouse_pos[0] / scale_factor) - (view[0] / 2);
-                let mut x1 = (mouse_pos[0] / scale_factor) + (view[0] / 2);
-                let mut y0 = (mouse_pos[1] / scale_factor) - (view[1] / 2);
-                let mut y1 = (mouse_pos[1] / scale_factor) + (view[1] / 2);
+                let view = [ (WINDOW_SIZE[0] as f32 / scale_factor).floor() , (WINDOW_SIZE[1] as f32 / scale_factor).floor() ];
+                let mut x0 = (mouse_pos[0] / scale_factor as f64) - (view[0] / 2.0) as f64;
+                let mut x1 = (mouse_pos[0] / scale_factor as f64) + (view[0] / 2.0) as f64;
+                let mut y0 = (mouse_pos[1] / scale_factor as f64) - (view[1] / 2.0) as f64;
+                let mut y1 = (mouse_pos[1] / scale_factor as f64) + (view[1] / 2.0) as f64;
 
                 if x0 < 0.0 {
                     x0 = 0.0;
-                    x1 = view[0];
-                } else if x1 > WORLD_SIZE[0] {
-                    x0 = WORLD_SIZE[0] - view[0];
-                    x1 = WORLD_SIZE[0];
+                    x1 = view[0] as f64;
+                } else if x1 > WORLD_SIZE[0] as f64 {
+                    x0 = (WORLD_SIZE[0] as f32 - view[0]) as f64;
+                    x1 = WORLD_SIZE[0] as f64;
                 };
 
                 if y0 < 0.0 {
                     y0 = 0.0;
-                    y1 = view[1];
-                } else if y1 > WORLD_SIZE[1] {
-                    y0 = WORLD_SIZE[1] - view[1];
-                    y1 = WORLD_SIZE[1];
+                    y1 = view[1] as f64;
+                } else if y1 > WORLD_SIZE[1].into() {
+                    y0 = (WORLD_SIZE[1] as f32 - view[1]) as f64;
+                    y1 = WORLD_SIZE[1] as f64;
                 };
 
-                //todo collect data from world 
+                //todo collect data from world
 
 
 
