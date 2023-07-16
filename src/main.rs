@@ -208,13 +208,15 @@ fn main() {
 
                 let (x0, y0, x1, y1) = (world.view_arr[0], world.view_arr[1], world.view_arr[2], world.view_arr[3]);
                 println!("{:?} \n {:?} \n", scale_factor, world.view_arr );
+
                 for i in x0..x1 {
                     for j in y0..y1 {
+
                         let tile_pos: [f64; 4] = [
-                            scale_factor * i as f64,
-                            scale_factor * j as f64,
-                            scale_factor * (i + 1) as f64,
-                            scale_factor * (j + 1) as f64,
+                            scale_factor * (i - x0) as f64,
+                            scale_factor * (j - y0) as f64,
+                            scale_factor * ((i - x0) + 1) as f64,
+                            scale_factor * ((j - y0) + 1) as f64,
                         ];
 
                         if world.map[j as usize][i as usize] == 1 {
