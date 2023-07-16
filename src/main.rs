@@ -78,11 +78,11 @@ fn main() {
     //GOL init
     let mut saves: String = String::from(INPUT_FILE);
     //println!("World starting point: {}", saves);
-    //let mut world: World = World::new_from_rle(INPUT_FILE);
-    let mut world: World = World::new_random();
+    let mut world: World = World::new_from_rle(INPUT_FILE);
+    //let mut world: World = World::new_random();
 
     //init texture
-    /* 
+    /*
     let mut canvas = ImageBuffer::new(WINDOW_SIZE as u32, WINDOW_SIZE as u32);
     let val:u32 = canvas.width();
 
@@ -91,7 +91,7 @@ fn main() {
             &TextureSettings::new()
         );
     */
-    
+
     //event loop vars
     let mut loop_: bool = false;
     let mut use_counter = true;
@@ -199,7 +199,7 @@ fn main() {
         if let Some(s) = e.mouse_scroll_args() {
             //println!("{:?}", s );
             match s[1] {
-                -1.0 => { 
+                -1.0 => {
                     scale_factor -= 0.5_f64;
                     if scale_factor < INIT_SCALE_FACTOR {
                         scale_factor = INIT_SCALE_FACTOR;
@@ -245,7 +245,7 @@ fn main() {
         if let Some(r) = e.render_args() {
             gl.draw(r.viewport(), |_c, g| {
                 graphics::clear(BLUE, g);
-                
+
 
                 let (x0, y0, x1, y1) = (world.view_arr[0], world.view_arr[1], world.view_arr[2], world.view_arr[3]);
                 println!("{:?} \n {:?} \n", scale_factor, world.view_arr );

@@ -78,7 +78,7 @@ impl World {
 
     pub fn new(seed: [[u8; WORLD_SIZE[1]]; WORLD_SIZE[0]]) -> World {
         World { map: seed,
-                view_arr: [0, 0, WORLD_SIZE[0] as i64, WORLD_SIZE[1] as i64] 
+                view_arr: [0, 0, WORLD_SIZE[0] as i64, WORLD_SIZE[1] as i64]
             }
     }
 
@@ -109,7 +109,7 @@ impl World {
             }
         }
         else if size < cmp::min(WORLD_SIZE[0], WORLD_SIZE[1]) {
-            let mut world_map: [[u8; WORLD_SIZE]; WORLD_SIZE] = [[0; WORLD_SIZE]; WORLD_SIZE];
+            let mut world_map: [[u8; WORLD_SIZE[1]]; WORLD_SIZE[0]] = [[0; WORLD_SIZE[1]]; WORLD_SIZE[0]];
 
             let mut decoded_flat_vec: Vec<u8> = Vec::new();
 
@@ -139,7 +139,7 @@ impl World {
                 twod_vec.push(decoded_flat_vec[i * size..(i + 1) * size].to_vec());
             }
 
-            let mut z = WORLD_SIZE - size;
+            let mut z = WORLD_SIZE[0] - size;
 
             if z % 2 == 0 {
                 z /= 2;
@@ -155,7 +155,9 @@ impl World {
                 }
             }
 
-            World { map: world_map }
+            World { map: world_map,
+                view_arr: [0, 0, WORLD_SIZE[0] as i64, WORLD_SIZE[1] as i64]
+            }
         }
         else {
             let mut decoded_flat_vec: Vec<u8> = Vec::new();
@@ -193,7 +195,7 @@ impl World {
                 .try_into()
                 .unwrap();
 
-            World { map: world_map, 
+            World { map: world_map,
                     view_arr: [0, 0, WORLD_SIZE[0] as i64, WORLD_SIZE[1] as i64]
              }
         }
