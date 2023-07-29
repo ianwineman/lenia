@@ -46,6 +46,7 @@ const INIT_SCALE_FACTOR : f64 = 16.0;
 const USER_MANUAL: &str = "Lenia User Manual:
 Press 'b' to create a blank world
 Press 'c' to toggle the speed controls for continuous stepping
+Press 'Down' to zoom out
 Press 'esc' to quit
 Press 'h' to print User Manual
 Press 'n' to create a random world
@@ -54,6 +55,8 @@ Press 'r' to reset to last saved pattern (input pattern if no saves made)
 Press 'Right_Arrow' to step forward
 Press 's' to save current pattern.
 Press 'Space' to toggle continuous stepping
+Press 'Up' to zoom in
+Press 'z' to zoom all the way out
 Press '+' to increase the speed of continuous stepping
 Press '-' to decrease the speed of continuous stepping";
 
@@ -104,23 +107,26 @@ fn main() {
     //event loop
     let mut events = Events::new(event_settings);
     while let Some(e) = events.next(&mut window) {
-        // idle events
-        if let Some(_i) = e.idle_args() {
-            if loop_ {
-                if use_counter {
-                    if counter < counter_max {
-                        counter += 1;
-                    }
-                    else {
-                        counter = 0;
-                        world.step_forward();
-                    }
+        if loop_ {
+            if use_counter {
+                if counter < counter_max {
+                    counter += 1;
                 }
                 else {
-                    world.step_forward(); // step as fast as possible
+                    counter = 0;
+                    world.step_forward();
                 }
             }
+            else {
+                world.step_forward(); // step as fast as possible
+            }
         }
+
+
+        // idle events
+        //if let Some(_i) = e.idle_args() {
+            //
+        //}
 
         // button press responses
         if let Some(k) = e.button_args() {
@@ -183,6 +189,76 @@ fn main() {
                         world.save(&path);
                         println!("World save point: {}", saves);
                     }
+                    Button::Keyboard(Key::Up) => {
+                        scale_factor += 0.5_f64;
+                        //println!("before: {:?}", scale_factor );
+                        scale_factor *= 100.0_f64;
+                        scale_factor = scale_factor.round();
+                        scale_factor = scale_factor / 100.0_f64;
+                        //println!("after: {:?}\n", scale_factor );
+
+                        let view = [ (WINDOW_SIZE[0] as f64 / scale_factor).floor() as i64 , (WINDOW_SIZE[1] as f64 / scale_factor).floor() as i64 ];
+                        let mut x0 = ((mouse_pos[0] / scale_factor).floor() as i64 - (view[0] / 2)) as i64;
+                        let mut x1 = ((mouse_pos[0] / scale_factor).ceil() as i64 + (view[0] / 2)) as i64;
+                        let mut y0 = ((mouse_pos[1] / scale_factor).floor() as i64 - (view[1] / 2)) as i64;
+                        let mut y1 = ((mouse_pos[1] / scale_factor).ceil() as i64 + (view[1] / 2)) as i64;
+
+                        if x0 < 0 {
+                            x0 = 0;
+                            x1 = view[0];
+                        } else if x1 > WORLD_SIZE[0] as i64 {
+                            x0 = WORLD_SIZE[0] as i64 - view[0];
+                            x1 = WORLD_SIZE[0] as i64;
+                        };
+
+                        if y0 < 0 {
+                            y0 = 0;
+                            y1 = view[1];
+                        } else if y1 > WORLD_SIZE[1] as i64 {
+                            y0 = WORLD_SIZE[1] as i64 - view[1];
+                            y1 = WORLD_SIZE[1] as i64;
+                        };
+
+                        world.view_arr = [x0, y0, x1, y1];
+                    }
+                    Button::Keyboard(Key::Down) => {
+                        if scale_factor > 6.5 {
+                            scale_factor -= 0.5_f64;
+                        }
+
+                        //println!("before: {:?}", scale_factor );
+                        scale_factor *= 100.0_f64;
+                        scale_factor = scale_factor.round();
+                        scale_factor = scale_factor / 100.0_f64;
+                        //println!("after: {:?}\n", scale_factor );
+
+                        let view = [ (WINDOW_SIZE[0] as f64 / scale_factor).floor() as i64 , (WINDOW_SIZE[1] as f64 / scale_factor).floor() as i64 ];
+                        let mut x0 = ((mouse_pos[0] / scale_factor).floor() as i64 - (view[0] / 2)) as i64;
+                        let mut x1 = ((mouse_pos[0] / scale_factor).ceil() as i64 + (view[0] / 2)) as i64;
+                        let mut y0 = ((mouse_pos[1] / scale_factor).floor() as i64 - (view[1] / 2)) as i64;
+                        let mut y1 = ((mouse_pos[1] / scale_factor).ceil() as i64 + (view[1] / 2)) as i64;
+
+                        if x0 < 0 {
+                            x0 = 0;
+                            x1 = view[0];
+                        } else if x1 > WORLD_SIZE[0] as i64 {
+                            x0 = WORLD_SIZE[0] as i64 - view[0];
+                            x1 = WORLD_SIZE[0] as i64;
+                        };
+
+                        if y0 < 0 {
+                            y0 = 0;
+                            y1 = view[1];
+                        } else if y1 > WORLD_SIZE[1] as i64 {
+                            y0 = WORLD_SIZE[1] as i64 - view[1];
+                            y1 = WORLD_SIZE[1] as i64;
+                        };
+
+                        world.view_arr = [x0, y0, x1, y1];
+                    }
+                    Button::Keyboard(Key::Z) => {
+                        scale_factor = 6.5;
+                    }
                     _ => (),
                 }
             }
@@ -194,9 +270,11 @@ fn main() {
         if let Some(m) = e.mouse_cursor_args() {
             //println!("{:?}", m );
             mouse_pos = m;
+
         }
 
         if let Some(s) = e.mouse_scroll_args() {
+
             //println!("{:?}", s );
             match s[1] {
                 -1.0 => {
@@ -248,7 +326,7 @@ fn main() {
 
 
                 let (x0, y0, x1, y1) = (world.view_arr[0], world.view_arr[1], world.view_arr[2], world.view_arr[3]);
-                println!("{:?} \n {:?} \n", scale_factor, world.view_arr );
+                //println!("{:?} \n {:?} \n", scale_factor, world.view_arr );
 
                 for i in x0..x1 {
                     for j in y0..y1 {
