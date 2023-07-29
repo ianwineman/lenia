@@ -124,6 +124,21 @@ fn main() {
 
         // button press responses
         if let Some(k) = e.button_args() {
+            if loop_ {
+                if use_counter {
+                    if counter < counter_max {
+                        counter += 1;
+                    }
+                    else {
+                        counter = 0;
+                        world.step_forward();
+                    }
+                }
+                else {
+                    world.step_forward(); // step as fast as possible
+                }
+            }
+
             //println!("{:?}", k );
             if k.state == ButtonState::Press {
                 match k.button {
@@ -194,9 +209,39 @@ fn main() {
         if let Some(m) = e.mouse_cursor_args() {
             //println!("{:?}", m );
             mouse_pos = m;
+
+            if loop_ {
+                if use_counter {
+                    if counter < counter_max {
+                        counter += 1;
+                    }
+                    else {
+                        counter = 0;
+                        world.step_forward();
+                    }
+                }
+                else {
+                    world.step_forward(); // step as fast as possible
+                }
+            }
         }
 
         if let Some(s) = e.mouse_scroll_args() {
+            if loop_ {
+                if use_counter {
+                    if counter < counter_max {
+                        counter += 1;
+                    }
+                    else {
+                        counter = 0;
+                        world.step_forward();
+                    }
+                }
+                else {
+                    world.step_forward(); // step as fast as possible
+                }
+            }
+
             //println!("{:?}", s );
             match s[1] {
                 -1.0 => {
@@ -248,7 +293,7 @@ fn main() {
 
 
                 let (x0, y0, x1, y1) = (world.view_arr[0], world.view_arr[1], world.view_arr[2], world.view_arr[3]);
-                println!("{:?} \n {:?} \n", scale_factor, world.view_arr );
+                //println!("{:?} \n {:?} \n", scale_factor, world.view_arr );
 
                 for i in x0..x1 {
                     for j in y0..y1 {
